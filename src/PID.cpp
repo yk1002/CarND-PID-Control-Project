@@ -43,20 +43,15 @@ void PID::move(double cte, double steering_angle, double speed, double throttle)
     steering_angle_out = -Kp * cte - Ki * int_cte / n_samples - Kd * delta_cte;
     steering_angle_out = min(max(steering_angle_out, -1.0), 1.0);
     
+    /*
+      Throttle control
+    */
     const auto abs_cte =  abs(cte);
     const auto abs_delta_cte = abs(delta_cte);
 
-    /*
-      Throttle control Rules:
-      
-      1. If the speed is less than 30mph, always floor the gas.
-      2. If the car is or starts getting off the course or going too fast (> 60mph), release the gas.
-      3. Otherwise, floor the gas.
-    */
-    throttle_out = 0.99;
-
-    if (abs_delta_cte > 0.2 || abs_cte > 0.5) {
-        if (speed > 70) throttle_out = -0.1;
-        else if (speed > 40) throttle_out = 0.0;
+    throttle_out = 0.99; // Floor the gas (i.e. going Diesel)
+    if (abs_delta_cte > 0.2 || abs_cte > 0.5) {  // ... except when the car starts moving away from the track or is being off the track
+        if (speed > 70) throttle_out = -0.1;     // break if it is doing more than 70mph
+        else if (speed > 40) throttle_out = 0.0; // release the gas if it is doing more than 40mph
     }
 }
