@@ -3,6 +3,7 @@
 #include "json.hpp"
 #include "PID.h"
 #include <math.h>
+#include <chrono>
 
 // for convenience
 using json = nlohmann::json;
@@ -28,12 +29,32 @@ std::string hasData(std::string s) {
   return "";
 }
 
-int main()
+int sample_count = 0;
+bool start_time_set = false;
+std::chrono::system_clock::time_point start_time;
+int sampling_duration_sec = INT_MAX;
+
+int main(int argc, char** argv)
 {
   uWS::Hub h;
 
   PID pid;
-  // TODO: Initialize the pid variable.
+  double Kp, Ki, Kd;
+
+  if (argc == 1) {
+      // These are optimal params discovered via experiments.
+      Kp = 0.15;
+      Ki = 0.00005;
+      Kd = 8.0;
+  }
+  else {
+      assert(argc >= 5);
+      sscanf(argv[1], "%lf", &Kp);
+      sscanf(argv[2], "%lf", &Ki);
+      sscanf(argv[3], "%lf", &Kd);
+      sscanf(argv[4], "%d", &sampling_duration_sec);
+  }
+  pid.Init(Kp, Ki, Kd);
 
   h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -49,23 +70,45 @@ int main()
           // j[1] is the data JSON object
           double cte = std::stod(j[1]["cte"].get<std::string>());
           double speed = std::stod(j[1]["speed"].get<std::string>());
-          double angle = std::stod(j[1]["steering_angle"].get<std::string>());
-          double steer_value;
+          double steering_angle = std::stod(j[1]["steering_angle"].get<std::string>());
+          double throttle = std::stod(j[1]["throttle"].get<std::string>());
+
           /*
           * TODO: Calcuate steering value here, remember the steering value is
           * [-1, 1].
           * NOTE: Feel free to play around with the throttle and speed. Maybe use
           * another PID controller to control the speed!
           */
+          pid.move(cte, steering_angle, speed, throttle);
+          steering_angle = pid.steering_angle_out;
+          throttle = pid.throttle_out;
+          ++sample_count;
           
           // DEBUG
-          std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
+          // std::cout << sample_count
+          //           << ", steering: " << steering_angle
+          //           << ", throttle: " << throttle
+          //           << ", speed: " << speed
+          //           << std::endl;
+
+          // terminate after preset amount of time has passed
+          if (start_time_set) {
+              const auto now = std::chrono::system_clock::now();
+              if (std::chrono::duration_cast<std::chrono::seconds>(now - start_time).count() >= sampling_duration_sec) {
+                  std::cout << "Error: " << pid.TotalError() << std::endl;
+                  exit(0);
+              }
+          }
+          else {
+              start_time = std::chrono::system_clock::now();
+              start_time_set = true;
+          }
 
           json msgJson;
-          msgJson["steering_angle"] = steer_value;
-          msgJson["throttle"] = 0.3;
+          msgJson["steering_angle"] = steering_angle;
+          msgJson["throttle"] = throttle;
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
-          std::cout << msg << std::endl;
+          //std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }
       } else {
