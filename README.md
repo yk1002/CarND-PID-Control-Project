@@ -1,3 +1,5 @@
+# Control Simulated Car with PID Controller
+
 ## The effect each of the P, I, D components had in my implementation.
 
 The P component pulls the car towards the "ideal path." The larger the value, the harder the car gets pulled. The [video](
@@ -15,6 +17,6 @@ First, I only set the P value, keeping the other two to zero. The goal was find 
 
 Then, I set the D component to keep the oscillation under control. By basically doing bi-section manually, I could find a value that allowed the car to do wraps successfully.
 
-I also experimened with the I component for a while, but I am not sure if I found a good value for it. The car's steering seems to be aligned well enough so that the P and D components alone could correct misalignment, if there is any, reasonably well.
+I also experimened with the I component for a while, but I am not sure if I found a good value for it. The car's steering seems to be aligned well enough so that the P and D components alone could correct misalignment, if there is any.
 
 Finally, I added a simple, rule based throttling control to allow the car to move as fast as possible. The rule keeps the gas pedal on the floor (i.e. going Diesel) unless the car is sufficiently off or is about to move away from the ideal path. When the gas pedal is not on the floor, it applies a brake if the speed exceeds 70MPH or just coasts otherwise.
