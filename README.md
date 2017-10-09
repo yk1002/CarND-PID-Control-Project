@@ -19,4 +19,4 @@ Then, I set the D component to keep the oscillation under control. By basically 
 
 I also experimened with the I component for a while, but I am not sure if I found a good value for it. The car's steering seems to be aligned well enough so that the P and D components alone could correct misalignment, if there is any.
 
-Finally, I added a simple, rule based throttling control to allow the car to move as fast as possible. The rule keeps the gas pedal on the floor (i.e. going Diesel) unless the car is sufficiently off or is about to move away from the ideal path. When the gas pedal is not on the floor, it applies a brake if the speed exceeds 70MPH or just coasts otherwise.
+Finally, I added a simple, rule based throttling control to allow the car to move as fast as possible. The rule keeps the gas pedal on the floor (i.e. going Vin Diesel) unless the car is sufficiently off or is about to move away from the ideal path. When the gas pedal is not on the floor, it applies a brake if the speed exceeds 70MPH or just coasts otherwise.
